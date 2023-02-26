@@ -78,14 +78,6 @@ class PostURLTests(TestCase):
                 response = self.authorized_client.get(url)
                 self.assertTemplateUsed(response, template)
 
-#    def test_403_page(self):
-#        """Тест страницы 403"""
-#        self.assertTemplateUsed(
-#            self.guest_client.get(
-#                'core.views.csrf_failure'),
-#            'core/403csrf.html'
-#        )
-
     def test_404_page(self):
         """Тест страницы 404"""
         self.assertTemplateUsed(

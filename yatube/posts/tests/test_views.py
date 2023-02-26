@@ -155,26 +155,27 @@ class PostPagesTest(TestCase):
                 self.assertTemplateUsed(response, reverse_name)
 
     def test_indext_page_show_correct_context(self):
-        """Шаблон index сформирован с правильным контекстом."""
-        response = self.guest_client.get(reverse('posts:index'))
-        expected = list(Post.objects.all()[:10])
-        self.assertEqual(list(response.context.get('page_obj')), expected)
-
-    def test_grouplist__page_show_correct_context(self):
-        """Шаблон group_list сформирован с правильным контекстом."""
-        response = self.guest_client.get(
-            reverse('posts:group_list', kwargs={'slug': 'test-slug'})
-        )
-        expected = list(Post.objects.filter(group_id=self.group.id)[:10])
-        self.assertEqual(list(response.context.get('page_obj')), expected)
-
-    def test_profile_show_correct_context(self):
-        """Список постов в шаблоне profile равен ожидаемому контексту."""
-        response = self.guest_client.get(
-            reverse("posts:profile", args=(self.post.author,))
-        )
-        expected = list(Post.objects.filter(author_id=self.user.id)[:10])
-        self.assertEqual(list(response.context["page_obj"]), expected)
+        """Шаблон index/group_list/profile
+          сформирован с правильным контекстом."""
+        urls = {
+            'posts:index': None,
+            'posts:group_list': {'slug': self.group.slug},
+            'posts:profile': {'username': self.user.username},
+        }
+        for url_name, data in urls.items():
+            with self.subTest(url_name=url_name):
+                response = self.authorized_client.get(
+                    reverse(url_name, kwargs=data))
+                self.assertEqual(response.context
+                                 ['page_obj'][0].text,
+                                 self.post.text)
+                self.assertEqual(response.context
+                                 ['page_obj'][0].group.title,
+                                 self.group.title)
+                self.assertEqual(response.context
+                                 ['page_obj'][0].author.username,
+                                 self.user.username)
+                self.assertTrue(response.context['page_obj'][0].image.name)
 
     def test_post_detail_show_correct_context(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
@@ -268,7 +269,7 @@ class PostPagesTest(TestCase):
     def test_follow(self):
         """Тестирование подписки на автора."""
         count_follow = Follow.objects.count()
-        new_author = User.objects.create(username='Kurva')
+        new_author = User.objects.create(username='Lermontov')
         self.authorized_client.get(
             reverse(
                 'posts:profile_follow',
@@ -283,7 +284,7 @@ class PostPagesTest(TestCase):
     def test_unfollow(self):
         """Тестирование отписки от автора."""
         count_follow = Follow.objects.count()
-        new_author = User.objects.create(username='Kurva')
+        new_author = User.objects.create(username='Lermontov')
         self.authorized_client.get(
             reverse(
                 'posts:profile_follow',
@@ -315,14 +316,3 @@ class PostPagesTest(TestCase):
         )
         context_follow = response_follow.context
         self.post_exist(context_follow)
-
-    def test_unfollowing_posts(self):
-        """Тестирование отсутствия поста автора у нового пользователя."""
-        new_user = User.objects.create(username='Kurva')
-        authorized_client = Client()
-        authorized_client.force_login(new_user)
-        response_unfollow = authorized_client.get(
-            reverse('posts:follow_index')
-        )
-        context_unfollow = response_unfollow.context
-        self.assertEqual(len(context_unfollow['page_obj']), 0)

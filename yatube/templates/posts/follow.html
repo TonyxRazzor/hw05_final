@@ -3,7 +3,7 @@
   {{ title }}
 {% endblock %} 
 {% block content %}
-  {% include 'posts/includes/switcher.html' %}
+  {% include 'posts/includes/switcher.html' with is_follow_index="True"  %}
   {% load thumbnail %}
   {% for post in page_obj %}
   <div class="container col-lg-9 col-sm-12">

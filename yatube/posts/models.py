@@ -6,8 +6,6 @@ User = get_user_model()
 
 class Group(models.Model):
 
-    def __str__(self) -> str:
-        return self.title
     title = models.CharField(
         max_length=200,
         verbose_name='Загаловок группы'
@@ -23,11 +21,12 @@ class Group(models.Model):
     class Meta:
         verbose_name_plural = 'Группы'
 
+    def __str__(self) -> str:
+        return self.title
+
 
 class Post(models.Model):
 
-    def __str__(self):
-        return self.text[:15]
     text = models.TextField(
         verbose_name='Загаловок поста',
         help_text='Введите текст поста'
@@ -60,6 +59,9 @@ class Post(models.Model):
     class Meta:
         ordering = ('-pub_date',)
         verbose_name_plural = 'Посты'
+
+    def __str__(self):
+        return self.text[:15]
 
 
 class Comment(models.Model):
@@ -104,3 +106,13 @@ class Follow(models.Model):
         on_delete=models.CASCADE,
         related_name='following'
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_user_author'
+            )
+        ]
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
